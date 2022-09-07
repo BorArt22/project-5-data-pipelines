@@ -46,17 +46,17 @@ class StageToRedshiftOperator(BaseOperator):
 
     def execute(self, context):
         # Set AWS S3 and Redshift connections
-        self.log.info("Process: Setting up Redshift connection")
+        self.log.info("Setting up Redshift connection")
         aws_hook = AwsHook(self.aws_credentials_id)
         credentials = aws_hook.get_credentials()
         redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
         self.log.info("Redshift connection created.")
 
-        self.log.info("Process: Clearing data from Redshift target table")
+        self.log.info("Clearing data from Redshift target table")
         redshift.run("DELETE FROM {}".format(self.target_table))
 
         # Prepare S3 paths
-        self.log.info("Process: Preparing Copying data from S3 to Redshift")
+        self.log.info("Preparing Copying data from S3 to Redshift")
         exec_date_rendered = self.execution_date.format(**context)
         self.log.info("Execution_date: {}".format(exec_date_rendered))
         exec_date_obj = datetime.datetime.strptime( exec_date_rendered, \
@@ -66,7 +66,7 @@ class StageToRedshiftOperator(BaseOperator):
         self.log.info("Execution_day: {}".format(exec_date_obj.day))
 
         if self.use_partitioned_data == "True":
-            s3_path = "s3://{}/{}/{}/{}/{}-{}-{:02d}-events.json".format(self.s3_bucket, self.s3_key,
+            s3_path = "s3://{}/{}/{}/{}/{}-{:02d}-{:02d}-events.json".format(self.s3_bucket, self.s3_key,
                                                               exec_date_obj.year, exec_date_obj.month,
                                                               exec_date_obj.year, exec_date_obj.month, exec_date_obj.day)
         else:
@@ -92,6 +92,6 @@ class StageToRedshiftOperator(BaseOperator):
         )
 
         # Executing COPY operation
-        self.log.info("Process: Executing Redshift COPY operation")
+        self.log.info("Executing Redshift COPY operation")
         redshift.run(formatted_sql)
         self.log.info("Redshift COPY operation DONE.")

@@ -36,7 +36,13 @@ class SqlQueries:
     """)
 
     time_table_insert = ("""
-        SELECT start_time, extract(hour from start_time), extract(day from start_time), extract(week from start_time), 
-               extract(month from start_time), extract(year from start_time), extract(dayofweek from start_time)
-        FROM songplays
+        INSERT INTO time (start_time, hour, day, week, month, year, weekday)
+        SELECT stage.start_time,
+               cast(extract(HOUR FROM stage.start_time) AS SMALLINT),
+               cast(extract(DAY FROM stage.start_time) AS SMALLINT),
+               cast(extract(WEEK FROM stage.start_time) AS SMALLINT),
+               cast(extract(MONTH FROM stage.start_time) AS SMALLINT),
+               cast(extract(YEAR FROM stage.start_time) AS SMALLINT),
+               cast(to_char(stage.start_time, 'D') AS SMALLINT)
+        FROM (SELECT distinct TIMESTAMP 'epoch' + staging_events.ts/1000 *INTERVAL '1 second' as start_time FROM staging_events) stage;
     """)
