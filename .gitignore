@@ -1,3 +1,6 @@
 # Config files
 datawarehouse/dwh.cfg
 datawarehouse/aws.cfg
+
+# template files
+datawarehouse/.ipynb_checkpoints/

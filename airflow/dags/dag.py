@@ -47,7 +47,7 @@ stage_songs_to_redshift =  StageToRedshiftOperator(
     s3_bucket="udacity-dend",
     s3_key="song_data",
     json_paths="",
-    use_partitioned_data="True",
+    use_partitioned_data="False",
     execution_date="{{ yesterday_ds }}"
 )
 
