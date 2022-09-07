@@ -2,6 +2,7 @@ import datetime
 from airflow.hooks.postgres_hook import PostgresHook
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
+from airflow.contrib.hooks.aws_hook import AwsHook
 
 class StageToRedshiftOperator(BaseOperator):
     """
@@ -46,6 +47,8 @@ class StageToRedshiftOperator(BaseOperator):
     def execute(self, context):
         # Set AWS S3 and Redshift connections
         self.log.info("Process: Setting up Redshift connection")
+        aws_hook = AwsHook(self.aws_credentials_id)
+        credentials = aws_hook.get_credentials()
         redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
         self.log.info("Redshift connection created.")
 
