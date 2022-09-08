@@ -64,8 +64,8 @@ class SqlQueries:
             USING public.users 
             WHERE temp_table_users.user_id = users.user_id
             ; 
-            INSERT INTO public.users
-            (SELECT user_id, firstname, lastname, gender, level
+            INSERT INTO public.users (user_id, first_name, last_name, gender, level)
+            (SELECT *
             FROM temp_table_users)
             ;
         END TRANSACTION;
