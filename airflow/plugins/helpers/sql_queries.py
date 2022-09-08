@@ -58,14 +58,14 @@ class SqlQueries:
             UPDATE public.users
             SET level = stage.level
             FROM temp_table_users stage
-            WHERE users.userid = stage.userid
+            WHERE users.user_id = stage.user_id
             ;
             DELETE FROM temp_table_users 
             USING public.users 
-            WHERE temp_table_users.userid = users.userid
+            WHERE temp_table_users.user_id = users.user_id
             ; 
             INSERT INTO public.users
-            (SELECT userid, firstname, lastname, gender, level
+            (SELECT user_id, firstname, lastname, gender, level
             FROM temp_table_users)
             ;
         END TRANSACTION;
