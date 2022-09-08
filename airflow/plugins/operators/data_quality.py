@@ -30,9 +30,9 @@ class DataQualityOperator(BaseOperator):
 
         for table in self.table_list:
             self.log.info('Checking DataQuality in {} BEGIN'.format(table))
-            
+
             formatted_sql = DataQualityOperator.sql_template_count.format(table)
-            records = redshift_hook.get_records(formatted_sql)
+            records = redshift.get_records(formatted_sql)
 
             if len(records) < 1 or len(records[0]) < 1:
                 raise ValueError(f"Data quality check failed. {table} returned no results")
