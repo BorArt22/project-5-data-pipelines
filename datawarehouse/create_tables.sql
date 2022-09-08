@@ -1,46 +1,10 @@
-DROP TABLE IF EXISTS public.artists;
-DROP TABLE IF EXISTS public.songplays;
-DROP TABLE IF EXISTS public.songs;
 DROP TABLE IF EXISTS public.staging_events;
 DROP TABLE IF EXISTS public.staging_songs;
+DROP TABLE IF EXISTS public.songplays;
+DROP TABLE IF EXISTS public.songs;
+DROP TABLE IF EXISTS public.artists;
 DROP TABLE IF EXISTS public."time";
 DROP TABLE IF EXISTS public.users;
-
-CREATE TABLE public.artists (
-	artist_id varchar(256) NOT NULL,
-	name varchar(256),
-	location varchar(256),
-	latitude numeric(18,0),
-	longitude numeric(18,0),
-	CONSTRAINT artists_pkey PRIMARY KEY (artist_id)
-);
-
-CREATE TABLE public.songplays (
-	songplay_id varchar(32) NOT NULL,
-	start_time timestamp NOT NULL,
-	user_id int4 NOT NULL,
-	"level" varchar(256),
-	song_id varchar(256),
-	artist_id varchar(256),
-	session_id int4,
-	location varchar(256),
-	user_agent varchar(256),
-	CONSTRAINT songplays_pkey PRIMARY KEY (songplay_id),
-	CONSTRAINT fk_user FOREIGN KEY(user_id) REFERENCES users(user_id),
-    CONSTRAINT fk_song FOREIGN KEY(song_id) REFERENCES songs(song_id),
-    CONSTRAINT fk_artist FOREIGN KEY(artist_id) REFERENCES artists(artist_id),
-    CONSTRAINT fk_start_time FOREIGN KEY(start_time) REFERENCES time(start_time)
-);
-
-CREATE TABLE public.songs (
-	song_id varchar(256) NOT NULL,
-	title varchar(256),
-	artist_id varchar(256),
-	"year" int4,
-	duration numeric(18,0),
-	CONSTRAINT songs_pkey PRIMARY KEY (song_id),
-	CONSTRAINT fk_artist FOREIGN KEY(artist_id) REFERENCES artists(artist_id)
-);
 
 CREATE TABLE public.staging_events (
 	artist varchar(256),
@@ -76,6 +40,7 @@ CREATE TABLE public.staging_songs (
 	"year" int4
 );
 
+
 CREATE TABLE public."time" (
 	start_time timestamp NOT NULL,
 	"hour" int4,
@@ -97,6 +62,39 @@ CREATE TABLE public.users (
 );
 
 
+CREATE TABLE public.artists (
+	artist_id varchar(256) NOT NULL,
+	name varchar(256),
+	location varchar(256),
+	latitude numeric(18,0),
+	longitude numeric(18,0),
+	CONSTRAINT artists_pkey PRIMARY KEY (artist_id)
+);
 
+CREATE TABLE public.songs (
+	song_id varchar(256) NOT NULL,
+	title varchar(256),
+	artist_id varchar(256),
+	"year" int4,
+	duration numeric(18,0),
+	CONSTRAINT songs_pkey PRIMARY KEY (song_id),
+	CONSTRAINT fk_artist FOREIGN KEY(artist_id) REFERENCES artists(artist_id)
+);
 
+CREATE TABLE public.songplays (
+	songplay_id varchar(32) NOT NULL,
+	start_time timestamp NOT NULL,
+	user_id int4 NOT NULL,
+	"level" varchar(256),
+	song_id varchar(256),
+	artist_id varchar(256),
+	session_id int4,
+	location varchar(256),
+	user_agent varchar(256),
+	CONSTRAINT songplays_pkey PRIMARY KEY (songplay_id),
+	CONSTRAINT fk_user FOREIGN KEY(user_id) REFERENCES users(user_id),
+    CONSTRAINT fk_song FOREIGN KEY(song_id) REFERENCES songs(song_id),
+    CONSTRAINT fk_artist FOREIGN KEY(artist_id) REFERENCES artists(artist_id),
+    CONSTRAINT fk_start_time FOREIGN KEY(start_time) REFERENCES time(start_time)
+);
 
