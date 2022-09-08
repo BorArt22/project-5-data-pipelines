@@ -25,6 +25,6 @@ class LoadDimensionOperator(BaseOperator):
         self.log.info("Redshift connection created.")
 
         # Execute UPSERT operation
-        self.log.info("Executing Redshift UPSERT operation in {}".format(self.target_table))
+        self.log.info("Executing Redshift UPSERT operation in dimension table {}".format(self.target_table))
         redshift.run(self.sqlquery)
-        self.log.info("Redshift UPSERT operation DONE in {}.".format(self.target_table))
+        self.log.info("Redshift UPSERT operation DONE in dimension table {}.".format(self.target_table))
