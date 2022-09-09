@@ -179,7 +179,7 @@ year|int4|Released year of song|-|-|-|
 ### songplays
 records in log data associated with song plays i.e. records with page `NextSong`
 |Field|Data Type|Description|Table Reference| Filed Reference|Primary Key|Notnull|
-|--|--|--|--|--|--|--|--|--|
+|--|--|--|--|--|--|--|
 |songplay_id|varchar(32)|Indeficator of songplay|-|-|Y|Y|
 |start_time|timestamp|Start time of songplay|time|start_time|-|Y|
 |user_id|int4|Indeficator of user|users|user_id|-|Y|
@@ -193,7 +193,7 @@ records in log data associated with song plays i.e. records with page `NextSong`
 ### users
 users in the app
 |Field|Data Type|Description|Table Reference| Filed Reference|Primary Key|Notnull|
-|--|--|--|--|--|--|--|--|--|
+|--|--|--|--|--|--|--|
 |user_id|int4|Indeficator of user|-|-|Y|Y|
 |first_name|VARCHAR(256)|First name of user|-|-|-|-|
 |last_name|VARCHAR(256)|Last name of user|-|-|-|-|
@@ -202,7 +202,7 @@ users in the app
 ### songs
 songs in music database
 |Field|Data Type|Description|Table Reference| Filed Reference|Primary Key|Notnull|
-|--|--|--|--|--|--|--|--|--|
+|--|--|--|--|--|--|--|
 |song_id|varchar(256)|Indeficator of song|-|-|Y|Y|
 |title|varchar(256)|Song title|-|-|-|Y|
 |artist_id|varchar(256)|Indeficator of artist|artists|artist_id|-|-|
@@ -211,7 +211,7 @@ songs in music database
 ### artists
 artists in music database
 |Field|Data Type|Description|Table Reference| Filed Reference|Primary Key|Notnull|
-|--|--|--|--|--|--|--|--|--|
+|--|--|--|--|--|--|--|
 |artist_id|varchar(256)|Indeficator of song|-|-|Y|Y|
 |name|varchar(256)|Song title|-|-|-|Y|
 |location|varchar(256)|Indeficator of artist|artists|artist_id|-|-|
@@ -220,7 +220,7 @@ artists in music database
 ### time
 timestamps of records in  **songplays**  broken down into specific units
 |Field|Data Type|Description|Table Reference| Filed Reference|Primary Key|Notnull|
-|--|--|--|--|--|--|--|--|--|
+|--|--|--|--|--|--|--|
 |start_time|TIMESTAMP|Start time of songplay|-|-|Y|Y|
 |hour|int4|Hour|-|-|-|-|
 |day|int4|Day|-|-|-|-|
