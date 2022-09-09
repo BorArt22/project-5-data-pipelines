@@ -4,7 +4,13 @@ from airflow.utils.decorators import apply_defaults
 
 class LoadFactOperator(BaseOperator):
     """
-    
+    Load fact table using staging area and dimension tables.
+    - Connect to Redshift
+    - Run a querry
+
+    redshift_conn_id - name of Rendsift connection in Airflow
+    target_table - name of fact table
+    sqlquery - sql query with upsert operation
     """
     
     ui_color = '#F98866'
