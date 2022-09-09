@@ -6,7 +6,24 @@ from airflow.contrib.hooks.aws_hook import AwsHook
 
 class StageToRedshiftOperator(BaseOperator):
     """
+    Original datasets are loading into staging tables 
+    from Amazon Simple Storage Service (Amazon S3) bucket 
+    using command copy one to one without processing data source.
+    - Connect to AWS
+    - Get credentials AWS
+    - Connect to Redshift
+    - Delete staging table
+    - Preparation sql script from template
+    - Copy from S3 to staging table
 
+    redshift_conn_id - name of Rendsift connection in Airflow
+    aws_credentials_id - name of AWS connection in Airflow
+    target_table - staging table
+    s3_bucket - name of bucket
+    s3_key - name of folder in bucket
+    json_paths - name of json paths in biucket
+    use_partitioned_data - variable for definitions what types of data used - partioned or not
+    execution_date - execution date
     """
     
     ui_color = '#358140'
