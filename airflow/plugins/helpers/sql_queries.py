@@ -1,4 +1,7 @@
 class SqlQueries:
+    """
+    contains SQL Queries for upsert operations in datapipeline
+    """
     songplay_table_insert = ("""
         CREATE TEMP TABLE temp_table_songplays (like public.songplays);
         INSERT INTO temp_table_songplays (songplay_id, start_time, user_id, level, song_id, artist_id, session_id, location, user_agent)

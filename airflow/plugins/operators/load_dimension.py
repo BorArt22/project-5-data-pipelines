@@ -3,7 +3,10 @@ from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
 class LoadDimensionOperator(BaseOperator):
-
+    """
+    
+    """
+    
     ui_color = '#80BD9E'
 
     @apply_defaults

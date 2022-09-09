@@ -237,11 +237,11 @@ B{{Begin Execution}} -->E(Stage Events)
 B --> S(Stage Songs)
     E --> U(Load user dim table)
     E --> T(Load time dim table)
-	S --> Sng(Load song dim table)
-		Sng --> A(Load artist dim table)
+	S --> A(Load artist dim table)
+		A--> Sng(Load song dim table)
 			U --> F(Load songplays fact table)
 			T --> F
-			A --> F
+			Sng --> F
 				F --> C(Run data quality checks)
 					C --> End{{EndExecution}}
 ```
@@ -428,7 +428,12 @@ END TRANSACTION;
 DROP TABLE temp_table_songplays;
 ```
 ## Data quality checks
-xxx
+Runs scripts to check table for number of rows using next template:
+```
+SELECT count(1) as count_f
+FROM {table_name}
+```
+If result of query is 0 or empty then script throws an error, else script ends successfully.
 
 # Example queries and results for song play analysis
 ### Query 1: Find all the users that has paid account and listen more than 10 songs, who are they

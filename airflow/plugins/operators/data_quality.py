@@ -3,8 +3,10 @@ from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
 class DataQualityOperator(BaseOperator):
-    '''
-    '''
+    """
+    Runs scripts to check table for number of rows
+    """
+    
     ui_color = '#89DA59'
 
     sql_template_count = """

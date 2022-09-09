@@ -6,6 +6,42 @@ from operators import (StageToRedshiftOperator, LoadFactOperator,
                        LoadDimensionOperator, DataQualityOperator)
 from helpers import SqlQueries
 
+""" 
+This Apache Airflow DAG provides a pipeline to:
+ - Copy data from AWS S3 to AWS Redshift staging tables:
+    - Stage_events;
+    - Stage_songs.
+ - Load data from staging tables to dimensions tables:
+    - Load_time_dim_table;
+    - Load_user_dim_table;
+    - Load_artist_dim_table;
+    - Load_song_dim_table.
+ - Load data from staging tables to fact table:
+    - Load_songplays_fact_table.
+ - Verify the data loaded to fact and dimension tables:
+    - Run_data_quality_checks.
+* As a default:
+    * Runs daily;
+    * Starts from 2018-11-02 for previous day (from 2018-11-01);
+    * In case of failure - DAG retries 3 times, after 5 min delay;
+    * Max active runs - 1.
+
+Datapipeline scheme:
+
+B{{Begin_execution}} -->E(Stage_vents)
+B --> S(Stage_songs)
+    E --> U(Load_user_dim_table)
+    E --> T(Load_time_dim_table)
+	S --> A(Load_artist_dim_table)
+		A --> Sng(Load_song_dim_table)
+			U --> F(Load_songplays_fact_table)
+			T --> F
+			Sng --> F
+				F --> C(Run_data_quality_checks)
+					C --> End{{End_execution}}
+
+"""
+
 default_args = {
     'owner': 'udacity',
     'depends_on_past': False,

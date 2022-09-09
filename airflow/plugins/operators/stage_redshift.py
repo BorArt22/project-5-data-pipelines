@@ -8,6 +8,7 @@ class StageToRedshiftOperator(BaseOperator):
     """
 
     """
+    
     ui_color = '#358140'
     template_fields = ("s3_key","execution_date")
 
