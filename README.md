@@ -214,7 +214,7 @@ artists in music database
 |--|--|--|--|--|--|--|
 |artist_id|varchar(256)|Indeficator of song|-|-|Y|Y|
 |name|varchar(256)|Song title|-|-|-|Y|
-|location|varchar(256)|Indeficator of artist|artists|artist_id|-|-|
+|location|varchar(256)|Indeficator of artist|-|-|-|-|
 |latitude|numeric(18,0)|Released year of song|-|-|-|-|
 |longitude|numeric(18,0)|Duration of song in seconds|-|-|-|Y|
 ### time
