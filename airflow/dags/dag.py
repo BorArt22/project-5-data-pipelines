@@ -49,14 +49,14 @@ default_args = {
     'retries': 3,
     'retry_delay': timedelta(minutes=5),
     'catchup_by_default': False,
-    'email_on_retry': False
+    'email_on_retry': False,
+    'max_active_runs': 1
 }
 
 dag = DAG('dag',
-          max_active_runs=1,
           default_args=default_args,
           description='Load and transform data in Redshift with Airflow',
-          schedule_interval='0 0 * * *'
+          schedule_interval='0 * * * *'
         )
 
 start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
