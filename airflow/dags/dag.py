@@ -44,7 +44,7 @@ B --> S(Stage_songs)
 default_args = {
     'owner': 'udacity',
     'depends_on_past': False,
-    'start_date': datetime(2018, 11, 2),
+    'start_date': datetime(2018, 11, 1),
     'retries': 3,
     'retry_delay': timedelta(minutes=5),
     'catchup_by_default': False,
