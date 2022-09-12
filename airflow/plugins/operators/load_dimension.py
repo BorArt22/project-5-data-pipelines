@@ -64,7 +64,8 @@ class LoadDimensionOperator(BaseOperator):
         self.log.info("Redshift connection created.")
 
 
-        insert_query = self.insert_query.format(target_table_name = self.target_table_name,
+        insert_query = LoadDimensionOperator.insert_query.format(
+                                                target_table_name = self.target_table_name,
                                                 target_table_fields = self.target_table_fields)
         # Render sql script
         self.log.info("Rendering sql script for {}. Insert mode = {}".format(self.target_table_name, self.insert_mode))
