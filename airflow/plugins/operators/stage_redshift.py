@@ -84,9 +84,12 @@ class StageToRedshiftOperator(BaseOperator):
         self.log.info("Execution_day: {}".format(exec_date_obj.day))
 
         if self.use_partitioned_data == "True":
-            s3_path = "s3://{}/{}/{}/{}/{}-{:02d}-{:02d}-events.json".format(self.s3_bucket, self.s3_key,
-                                                              exec_date_obj.year, exec_date_obj.month,
-                                                              exec_date_obj.year, exec_date_obj.month, exec_date_obj.day)
+            s3_path = "s3://{s3_bucket}/{s3_key}/{year}/{month}/{year}-{month:02d}-{day:02d}-events.json".format(
+                                                            s3_bucket = self.s3_bucket, 
+                                                            s3_key = self.s3_key,
+                                                            year = exec_date_obj.year, 
+                                                            month = exec_date_obj.month,
+                                                            day = exec_date_obj.day)
         else:
             s3_path = "s3://{}/{}".format(self.s3_bucket, self.s3_key)
 

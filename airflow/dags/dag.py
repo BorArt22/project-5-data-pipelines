@@ -71,7 +71,7 @@ stage_events_to_redshift =  StageToRedshiftOperator(
     s3_key="log_data",
     json_paths="log_json_path.json",
     use_partitioned_data="True",
-    execution_date="{{ yesterday_ds }}"
+    execution_date="{{ ds }}"
 )
 
 
@@ -85,47 +85,63 @@ stage_songs_to_redshift =  StageToRedshiftOperator(
     s3_key="song_data",
     json_paths="",
     use_partitioned_data="False",
-    execution_date="{{ yesterday_ds }}"
+    execution_date="{{ ds }}"
 )
 
 load_songplays_table = LoadFactOperator(
     task_id='Load_songplays_fact_table',
     dag=dag,
     redshift_conn_id="redshift",
-    target_table="public.songplays",
-    sqlquery=SqlQueries.songplay_table_insert
+    target_table_name="songplays",
+    target_table_fields=SqlQueries.songplay_table_fields,
+    target_table_key=SqlQueries.songplay_table_key,
+    sql_query_update=SqlQueries.songplay_table_update,
+    sql_query_insert=SqlQueries.songplay_table_insert,
+    execution_date="{{ ds }}",
 )
 
 load_user_dimension_table = LoadDimensionOperator(
     task_id='Load_user_dim_table',
     dag=dag,
     redshift_conn_id="redshift",
-    target_table="public.users",
-    sqlquery=SqlQueries.user_table_insert
+    target_table="users",
+    target_table_fields=SqlQueries.user_table_fields,
+    target_table_key=SqlQueries.user_table_key,
+    sql_query_update=SqlQueries.user_table_update,
+    sql_query_insert=SqlQueries.user_table_insert,
 )
 
 load_song_dimension_table = LoadDimensionOperator(
     task_id='Load_song_dim_table',
     dag=dag,
     redshift_conn_id="redshift",
-    target_table="public.songs",
-    sqlquery=SqlQueries.song_table_insert
+    target_table="songs",
+    target_table_fields=SqlQueries.song_table_fields,
+    target_table_key=SqlQueries.song_table_key,
+    sql_query_update="",
+    sql_query_insert=SqlQueries.song_table_insert,
 )
 
 load_artist_dimension_table = LoadDimensionOperator(
     task_id='Load_artist_dim_table',
     dag=dag,
     redshift_conn_id="redshift",
-    target_table="public.artists",
-    sqlquery=SqlQueries.artist_table_insert
+    target_table="artists",
+    target_table_fields=SqlQueries.artist_table_fields,
+    target_table_key=SqlQueries.artist_table_key,
+    sql_query_update="",
+    sql_query_insert=SqlQueries.artist_table_insert,
 )
 
 load_time_dimension_table = LoadDimensionOperator(
     task_id='Load_time_dim_table',
     dag=dag,
     redshift_conn_id="redshift",
-    target_table="public.time",
-    sqlquery=SqlQueries.time_table_insert
+    target_table="time",
+    target_table_fields=SqlQueries.time_table_fields,
+    target_table_key=SqlQueries.time_table_key,
+    sql_query_update="",
+    sql_query_insert=SqlQueries.time_table_insert,
 )
 
 run_quality_checks = DataQualityOperator(
