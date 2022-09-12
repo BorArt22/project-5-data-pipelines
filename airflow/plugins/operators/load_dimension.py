@@ -22,7 +22,7 @@ class LoadDimensionOperator(BaseOperator):
                     WHERE {target_table_name}.{target_table_key} = stage.{target_table_key})
     """)
 
-    delete_query ("TRUNCATE TABLE {target_table_name};")
+    delete_query = ("TRUNCATE TABLE {target_table_name};")
 
     insert_delete_mode_query_where = ("1=1")
 
@@ -57,28 +57,29 @@ class LoadDimensionOperator(BaseOperator):
                                                 target_table_fields = self.target_table_fields)
         # Render sql script
         self.log.info("Rendering sql script for {}. Insert mode = {}".format(self.target_table_name, self.insert_mode))
-        if self.insert_mode = "append":
-            sqlquery = insert_query +
+        if self.insert_mode == "append":
+            sqlquery = insert_query + \
                        self.sql_query_insert.format(LoadDimensionOperator.append_mode_query_where.format(
-                                                        target_table_key = self.target_table_key
+                                                        target_table_key = self.target_table_key,
                                                         target_table_name = self.target_table_name
                        ))
-        elif self.insert_mode = "insert_delete":
-            sqlquery = LoadDimensionOperator.delete_query.format(target_table_name = self.target_table_name) + 
-                       insert_query + 
+        elif self.insert_mode == "insert_delete":
+            sqlquery = LoadDimensionOperator.delete_query.format(target_table_name = self.target_table_name) + \
+                       insert_query + \
                        self.sql_query_insert.format(LoadDimensionOperator.insert_delete_mode_query_where)
-        elif self.insert_mode = "append_update": 
-            sqlquery = insert_query +
+        elif self.insert_mode == "append_update": 
+            sqlquery = insert_query + \
                        self.sql_query_insert.format(LoadDimensionOperator.append_mode_query_where.format(
-                                                        target_table_key = self.target_table_key
+                                                        target_table_key = self.target_table_key,
                                                         target_table_name = self.target_table_name
-                       )) +
+                       )) + \
                        self.sql_query_update
         else:
-            raise ValueError(f"Invalid value in insert_mode = {}".format(self.insert_mode))
+            self.log.info("Invalid value in insert_mode = {}".format(self.insert_mode))
+            sqlquery = ""
 
 
         # Execute UPSERT operation
         self.log.info("Executing Redshift UPSERT operation in dimension table {}".format(self.target_table))
-        redshift.run(self.sqlquery)
+        redshift.run(sqlquery)
         self.log.info("Redshift UPSERT operation DONE in dimension table {}.".format(self.target_table))

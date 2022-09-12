@@ -1,4 +1,3 @@
-import datetime, timedelta
 from airflow.hooks.postgres_hook import PostgresHook
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
@@ -40,11 +39,12 @@ class LoadFactOperator(BaseOperator):
         self.log.info("Redshift connection created.")
 
         # Render sql script
-         sqlquery = insert_query.format(target_table_name = self.target_table_name
-                                       target_table_fields = self.target_table_fields)
-                   + self.sql_query_insert
+        insert_query_rendered = LoadFactOperator.insert_query.format(
+                                    target_table_name = self.target_table_name,
+                                    target_table_fields = self.target_table_fields)
+        sqlquery = insert_query_rendered + self.sql_query_insert
 
         # Execute UPSERT operation
         self.log.info("Executing Redshift UPSERT operation in fact table {}".format(self.target_table))
-        redshift.run(self.sqlquery)
+        redshift.run(sqlquery)
         self.log.info("Redshift UPSERT operation DONE in fact table {}.".format(self.target_table))
