@@ -21,10 +21,9 @@ This Apache Airflow DAG provides a pipeline to:
  - Verify the data loaded to fact and dimension tables:
     - Run_data_quality_checks.
 * As a default:
-    * Runs daily;
-    * Starts from 2018-11-02 for previous day (from 2018-11-01);
+    * Runs hourly;
+    * Starts from 2018-11-01 00:00:00;
     * In case of failure - DAG retries 3 times, after 5 min delay;
-    * Max active runs - 1.
 
 Datapipeline scheme:
 
@@ -49,8 +48,7 @@ default_args = {
     'retries': 3,
     'retry_delay': timedelta(minutes=5),
     'catchup_by_default': False,
-    'email_on_retry': False,
-    'max_active_runs': 1
+    'email_on_retry': False
 }
 
 dag = DAG('dag',
@@ -95,9 +93,7 @@ load_songplays_table = LoadFactOperator(
     target_table_name="songplays",
     target_table_fields=SqlQueries.songplay_table_fields,
     target_table_key=SqlQueries.songplay_table_key,
-    sql_query_update=SqlQueries.songplay_table_update,
-    sql_query_insert=SqlQueries.songplay_table_insert,
-    execution_date="{{ ds }}",
+    sql_query_insert=SqlQueries.songplay_table_insert
 )
 
 load_user_dimension_table = LoadDimensionOperator(
@@ -109,6 +105,7 @@ load_user_dimension_table = LoadDimensionOperator(
     target_table_key=SqlQueries.user_table_key,
     sql_query_update=SqlQueries.user_table_update,
     sql_query_insert=SqlQueries.user_table_insert,
+    insert_mode = "append",
 )
 
 load_song_dimension_table = LoadDimensionOperator(
@@ -120,6 +117,7 @@ load_song_dimension_table = LoadDimensionOperator(
     target_table_key=SqlQueries.song_table_key,
     sql_query_update="",
     sql_query_insert=SqlQueries.song_table_insert,
+    insert_mode = "append",
 )
 
 load_artist_dimension_table = LoadDimensionOperator(
@@ -131,6 +129,7 @@ load_artist_dimension_table = LoadDimensionOperator(
     target_table_key=SqlQueries.artist_table_key,
     sql_query_update="",
     sql_query_insert=SqlQueries.artist_table_insert,
+    insert_mode = "append",
 )
 
 load_time_dimension_table = LoadDimensionOperator(

@@ -19,53 +19,52 @@ class SqlQueries:
         LEFT JOIN songs ON upper(BTRIM(songs.title)) = upper(BTRIM(events.song))
                        AND trunc(songs.duration) = trunc(events.length)
         LEFT JOIN artists ON upper(BTRIM(artists.name)) = upper(BTRIM(events.artist))
-        WHERE start_time BETWEEN TO_TIMESTAMP('{}','YYYY-MM-DD HH:MI:SS') AND TO_TIMESTAMP('{}','YYYY-MM-DD HH:MI:SS')
-    """)
-
-    songplay_table_update = ("""
-            UPDATE public.songplay
-            SET user_id = stage.user_id,
-                level = stage.level,
-                song_id = stage.song_id,
-                artist_id = stage.artist_id,
-                location = stage.location,
-                user_agent = stage.user_agent
-            FROM temp_table_songplay stage
-            WHERE songplay.songplay_id = stage.songplay_id
-            ;
+        WHERE NOT EXISTS (SELECT songplay_id FROM songplay WHERE songplay.songplay_id =  md5(events.sessionid || events.start_time))
     """)
 
     songplay_table_key = ("songplay_id")
 
     songplay_table_fields = ("songplay_id, start_time, user_id, level, song_id, artist_id, session_id, location, user_agent")
 
+
     user_table_insert = ("""
-        CREATE TEMP TABLE temp_table_users (like public.users);
-        INSERT INTO temp_table_users (user_id, first_name, last_name, gender, level)
         SELECT 
-            dedubl.userid,
-            dedubl.firstname,
-            dedubl.lastname,
-            dedubl.gender,
-            dedubl.level
+            stage.user_id,
+            stage.firstname,
+            stage.lastname,
+            stage.gender,
+            stage.level
         FROM (   
             SELECT 
-                stage.userid,
+                stage.userid as user_id,
                 stage.firstname,
                 stage.lastname,
                 stage.gender,
                 stage.level,
                 row_number() over (partition by stage.userid order by stage.ts desc) as rn
             FROM staging_events stage
-            WHERE page='NextSong' AND stage.userid is not null   
-        ) dedubl
-        WHERE rn = 1
+            WHERE page='NextSong' AND stage.userid is not null
+        ) stage
+        WHERE rn = 1  AND {INSERT_MODE_QUERY} 
     """)
 
     user_table_update = ("""
             UPDATE public.users
             SET level = stage.level
-            FROM temp_table_users stage
+            FROM (
+                SELECT 
+                    last_user_event.user_id,
+                    last_user_event.level
+                FROM (   
+                    SELECT 
+                        stage.userid as user_id,
+                        stage.level,
+                        row_number() over (partition by stage.userid order by stage.ts desc) as rn
+                    FROM staging_events stage
+                    WHERE page='NextSong' AND stage.userid is not null
+                ) last_user_event
+                WHERE rn = 1 
+            ) stage
             WHERE users.user_id = stage.user_id
             ;
     """)
@@ -90,6 +89,7 @@ class SqlQueries:
                     stage.duration,
                     row_number() over (partition by stage.song_id order by LEN(stage.title) asc, stage.title asc) as rn
                 FROM staging_songs stage
+                WHERE {INSERT_MODE_QUERY}
                 ) dedubl
             WHERE rn = 1
     """)
@@ -107,13 +107,14 @@ class SqlQueries:
         dedubl.artist_longitude
         FROM (
             SELECT 
-            stage.artist_id,
-            stage.artist_name,
-            stage.artist_location,
-            stage.artist_latitude,
-            stage.artist_longitude,
-            row_number() over (partition by stage.artist_id order by LEN(stage.artist_name) asc, stage.artist_name asc) as rn
+                stage.artist_id,
+                stage.artist_name,
+                stage.artist_location,
+                stage.artist_latitude,
+                stage.artist_longitude,
+                row_number() over (partition by stage.artist_id order by LEN(stage.artist_name) asc, stage.artist_name asc) as rn
             FROM staging_songs stage
+            WHERE {INSERT_MODE_QUERY}
             ) dedubl
         WHERE rn = 1
     """)
@@ -136,6 +137,7 @@ class SqlQueries:
                 distinct TIMESTAMP 'epoch' + staging_events.ts/1000 *INTERVAL '1 second' as start_time 
             FROM staging_events
             WHERE page='NextSong') stage
+        WHERE {INSERT_MODE_QUERY}
     """)
 
     time_table_key = ("start_time")
