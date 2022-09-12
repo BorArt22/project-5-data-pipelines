@@ -19,7 +19,7 @@ class SqlQueries:
         LEFT JOIN songs ON upper(BTRIM(songs.title)) = upper(BTRIM(events.song))
                        AND trunc(songs.duration) = trunc(events.length)
         LEFT JOIN artists ON upper(BTRIM(artists.name)) = upper(BTRIM(events.artist))
-        WHERE NOT EXISTS (SELECT songplay_id FROM songplay WHERE songplay.songplay_id =  md5(events.sessionid || events.start_time))
+        WHERE NOT EXISTS (SELECT songplay_id FROM songplays WHERE songplays.songplay_id =  md5(events.sessionid || events.start_time))
     """)
 
     songplay_table_key = ("songplay_id")
