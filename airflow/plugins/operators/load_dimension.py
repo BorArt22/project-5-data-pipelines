@@ -17,8 +17,7 @@ class LoadDimensionOperator(BaseOperator):
     sql_query_insert - sql query for insert to target table
     insert_mode - mode for insert query 
                 'append' (as default) - load data with new primary key from staging area
-                'insert_delete' - truncate target table and load data from staging area
-                'append_update' - load data with new primary key from staging area and run update query
+                'delete-load' - truncate target table and load data from staging area
     """
     
     ui_color = '#80BD9E'
@@ -35,7 +34,7 @@ class LoadDimensionOperator(BaseOperator):
 
     delete_query = ("TRUNCATE TABLE {target_table_name};")
 
-    insert_delete_mode_query_where = ("1=1")
+    delete_load_mode_query_where = ("1=1")
 
     @apply_defaults
     def __init__(self,
@@ -43,7 +42,6 @@ class LoadDimensionOperator(BaseOperator):
                  target_table_name="",
                  target_table_fields="",
                  target_table_key="",
-                 sql_query_update="",
                  sql_query_insert="",
                  insert_mode = "append",
                  *args, **kwargs):
@@ -53,7 +51,6 @@ class LoadDimensionOperator(BaseOperator):
         self.target_table_name = target_table_name
         self.target_table_fields = target_table_fields
         self.target_table_key = target_table_key
-        self.sql_query_update = sql_query_update
         self.sql_query_insert = sql_query_insert
         self.insert_mode = insert_mode
 
@@ -75,17 +72,10 @@ class LoadDimensionOperator(BaseOperator):
                                                         target_table_key = self.target_table_key,
                                                         target_table_name = self.target_table_name
                        ))
-        elif self.insert_mode == "insert_delete":
+        elif self.insert_mode == "delete-load":
             sqlquery = LoadDimensionOperator.delete_query.format(target_table_name = self.target_table_name) + \
                        insert_query + \
-                       self.sql_query_insert.format(INSERT_MODE_QUERY = LoadDimensionOperator.insert_delete_mode_query_where)
-        elif self.insert_mode == "append_update": 
-            sqlquery = insert_query + \
-                       self.sql_query_insert.format(INSERT_MODE_QUERY = LoadDimensionOperator.append_mode_query_where.format(
-                                                        target_table_key = self.target_table_key,
-                                                        target_table_name = self.target_table_name
-                       )) + \
-                       self.sql_query_update
+                       self.sql_query_insert.format(INSERT_MODE_QUERY = LoadDimensionOperator.delete_load_mode_query_where)
         else:
             self.log.info("Invalid value in insert_mode = {}".format(self.insert_mode))
             sqlquery = ""

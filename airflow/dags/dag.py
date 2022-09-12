@@ -103,7 +103,6 @@ load_user_dimension_table = LoadDimensionOperator(
     target_table_name="users",
     target_table_fields=SqlQueries.user_table_fields,
     target_table_key=SqlQueries.user_table_key,
-    sql_query_update=SqlQueries.user_table_update,
     sql_query_insert=SqlQueries.user_table_insert,
     insert_mode = "append",
 )
@@ -115,7 +114,6 @@ load_song_dimension_table = LoadDimensionOperator(
     target_table_name="songs",
     target_table_fields=SqlQueries.song_table_fields,
     target_table_key=SqlQueries.song_table_key,
-    sql_query_update="",
     sql_query_insert=SqlQueries.song_table_insert,
     insert_mode = "append",
 )
@@ -127,7 +125,6 @@ load_artist_dimension_table = LoadDimensionOperator(
     target_table_name="artists",
     target_table_fields=SqlQueries.artist_table_fields,
     target_table_key=SqlQueries.artist_table_key,
-    sql_query_update="",
     sql_query_insert=SqlQueries.artist_table_insert,
     insert_mode = "append",
 )
@@ -139,7 +136,6 @@ load_time_dimension_table = LoadDimensionOperator(
     target_table_name="time",
     target_table_fields=SqlQueries.time_table_fields,
     target_table_key=SqlQueries.time_table_key,
-    sql_query_update="",
     sql_query_insert=SqlQueries.time_table_insert,
 )
 

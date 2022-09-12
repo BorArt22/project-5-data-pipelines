@@ -48,27 +48,6 @@ class SqlQueries:
         WHERE rn = 1  AND {INSERT_MODE_QUERY} 
     """)
 
-    user_table_update = ("""
-            UPDATE public.users
-            SET level = stage.level
-            FROM (
-                SELECT 
-                    last_user_event.user_id,
-                    last_user_event.level
-                FROM (   
-                    SELECT 
-                        stage.userid as user_id,
-                        stage.level,
-                        row_number() over (partition by stage.userid order by stage.ts desc) as rn
-                    FROM staging_events stage
-                    WHERE page='NextSong' AND stage.userid is not null
-                ) last_user_event
-                WHERE rn = 1 
-            ) stage
-            WHERE users.user_id = stage.user_id
-            ;
-    """)
-
     user_table_key = ("user_id")
 
     user_table_fields = ("user_id, first_name, last_name, gender, level")
