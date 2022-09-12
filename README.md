@@ -255,7 +255,7 @@ Log data is loading for execution date to staging table `staging_events`.
 Song data is loading fully from folder to staging table `staging_songs`.
 
 ## Loading dimension tables
-For loading in dimension tables are possible two modes - `append` and `insert_delete`. For user table is also implemented `append_update` mode.
+For loading in dimension tables are possible two modes - `append` and `insert_delete`.
 
 `append`  mode:
 Insert only rows from staging table that does not have same primary key as target table. 
@@ -264,9 +264,6 @@ Insert only rows from staging table that does not have same primary key as targe
 
  1. Truncate target table
  2. Insert all rows from staging table. {INSERT_MODE_QUERY} changed on `1=1` 
-
-`append_update` mode:
-As `append`  mode, but add update query.
 
 ### Load user dim table
  `users` table is filled from  `staging_events` using next command:
@@ -289,26 +286,6 @@ FROM (
     WHERE page='NextSong' AND stage.userid is not null   
 ) stage
 WHERE rn = 1 and {INSERT_MODE_QUERY};
-```
-For `append_update` mode additionaly is used next command:
-```
-UPDATE public.users
-SET level = stage.level
-FROM (
-    SELECT 
-        last_user_event.user_id,
-        last_user_event.level
-    FROM (   
-        SELECT 
-            stage.userid as user_id,
-            stage.level,
-            row_number() over (partition by stage.userid order by stage.ts desc) as rn
-        FROM staging_events stage
-        WHERE page='NextSong' AND stage.userid is not null
-    ) last_user_event
-    WHERE rn = 1 
-) stage
-WHERE users.user_id = stage.user_id;
 ```
 ### Load time dim table
  `time` table is filled from  `staging_events` using next command:
