@@ -8,6 +8,12 @@ class LoadFactOperator(BaseOperator):
     - Connect to Redshift
     - Rendering sql script
     - Run a querry
+
+    redshift_conn_id - name of Rendsift connection in Airflow
+    target_table_name - name of table that will be data is loading to
+    target_table_fields - fields in target table
+    target_table_key - primary key in target table
+    sql_query_insert - sql query for insert to target table
     """
     
     ui_color = '#F98866'
@@ -44,7 +50,7 @@ class LoadFactOperator(BaseOperator):
                                     target_table_fields = self.target_table_fields)
         sqlquery = insert_query_rendered + self.sql_query_insert
 
-        # Execute UPSERT operation
-        self.log.info("Executing Redshift UPSERT operation in fact table {}".format(self.target_table))
+        # Execute SQL operation
+        self.log.info("Executing Redshift SQL operation in fact table {}".format(self.target_table_name))
         redshift.run(sqlquery)
-        self.log.info("Redshift UPSERT operation DONE in fact table {}.".format(self.target_table))
+        self.log.info("Redshift SQL operation DONE in fact table {}.".format(self.target_table_name))

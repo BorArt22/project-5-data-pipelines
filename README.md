@@ -179,7 +179,7 @@ year|int4|Released year of song|-|-|-|
 ### songplays
 records in log data associated with song plays i.e. records with page `NextSong`
 |Field|Data Type|Description|Table Reference| Filed Reference|Primary Key|Notnull|
-|--|--|--|--|--|--|--|
+|--|--|--|--|--|--|--|--|--|
 |songplay_id|varchar(32)|Indeficator of songplay|-|-|Y|Y|
 |start_time|timestamp|Start time of songplay|time|start_time|-|Y|
 |user_id|int4|Indeficator of user|users|user_id|-|Y|
@@ -193,7 +193,7 @@ records in log data associated with song plays i.e. records with page `NextSong`
 ### users
 users in the app
 |Field|Data Type|Description|Table Reference| Filed Reference|Primary Key|Notnull|
-|--|--|--|--|--|--|--|
+|--|--|--|--|--|--|--|--|--|
 |user_id|int4|Indeficator of user|-|-|Y|Y|
 |first_name|VARCHAR(256)|First name of user|-|-|-|-|
 |last_name|VARCHAR(256)|Last name of user|-|-|-|-|
@@ -202,7 +202,7 @@ users in the app
 ### songs
 songs in music database
 |Field|Data Type|Description|Table Reference| Filed Reference|Primary Key|Notnull|
-|--|--|--|--|--|--|--|
+|--|--|--|--|--|--|--|--|--|
 |song_id|varchar(256)|Indeficator of song|-|-|Y|Y|
 |title|varchar(256)|Song title|-|-|-|Y|
 |artist_id|varchar(256)|Indeficator of artist|artists|artist_id|-|-|
@@ -211,16 +211,16 @@ songs in music database
 ### artists
 artists in music database
 |Field|Data Type|Description|Table Reference| Filed Reference|Primary Key|Notnull|
-|--|--|--|--|--|--|--|
+|--|--|--|--|--|--|--|--|--|
 |artist_id|varchar(256)|Indeficator of song|-|-|Y|Y|
 |name|varchar(256)|Song title|-|-|-|Y|
-|location|varchar(256)|Indeficator of artist|-|-|-|-|
+|location|varchar(256)|Indeficator of artist|artists|artist_id|-|-|
 |latitude|numeric(18,0)|Released year of song|-|-|-|-|
 |longitude|numeric(18,0)|Duration of song in seconds|-|-|-|Y|
 ### time
 timestamps of records in  **songplays**  broken down into specific units
 |Field|Data Type|Description|Table Reference| Filed Reference|Primary Key|Notnull|
-|--|--|--|--|--|--|--|
+|--|--|--|--|--|--|--|--|--|
 |start_time|TIMESTAMP|Start time of songplay|-|-|Y|Y|
 |hour|int4|Hour|-|-|-|-|
 |day|int4|Day|-|-|-|-|
@@ -249,27 +249,37 @@ B --> S(Stage Songs)
 Original datasets are loading into staging tables from Amazon Simple Storage Service (Amazon S3) bucket using command copy one to one without processing data source.
 
 ### Stage Events
-Log data is loading for previous day to copy only one file in staging table `staging_events`.
+Log data is loading for execution date to staging table `staging_events`.
 
 ### Stage Songs
 Song data is loading fully from folder to staging table `staging_songs`.
 
-## Loading from staging area
-For loadiong in dimension and fact tables using upsert operations.
+## Loading dimension tables
+For loading in dimension tables are possible two modes - `append` and `insert_delete`. For user table is also implemented `append_update` mode.
+
+`append`  mode:
+Insert only rows from staging table that does not have same primary key as target table. 
+
+`insert_delete`  mode:
+
+ 1. Truncate target table
+ 2. Insert all rows from staging table. {INSERT_MODE_QUERY} changed on `1=1` 
+
+`append_update` mode:
+As `append`  mode, but add update query.
+
 ### Load user dim table
  `users` table is filled from  `staging_events` using next command:
 ```
-CREATE TEMP TABLE temp_table_users (like public.users);
-INSERT INTO temp_table_users (user_id, first_name, last_name, gender, level)
 SELECT 
-    dedubl.userid,
-    dedubl.firstname,
-    dedubl.lastname,
-    dedubl.gender,
-    dedubl.level
+    stage.user_id,
+    stage.firstname,
+    stage.lastname,
+    stage.gender,
+    stage.level
 FROM (   
     SELECT 
-        stage.userid,
+        stage.userid as user_id,
         stage.firstname,
         stage.lastname,
         stage.gender,
@@ -277,58 +287,50 @@ FROM (
         row_number() over (partition by stage.userid order by stage.ts desc) as rn
     FROM staging_events stage
     WHERE page='NextSong' AND stage.userid is not null   
-) dedubl
-WHERE rn = 1
-;
-BEGIN TRANSACTION;
-    UPDATE public.users
-    SET level = stage.level
-    FROM temp_table_users stage
-    WHERE users.user_id = stage.user_id
-    ;
-    DELETE FROM temp_table_users 
-    USING public.users 
-    WHERE temp_table_users.user_id = users.user_id
-    ; 
-    INSERT INTO public.users (user_id, first_name, last_name, gender, level)
-    (SELECT *
-    FROM temp_table_users)
-    ;
-END TRANSACTION;
-DROP TABLE temp_table_users; 
+) stage
+WHERE rn = 1 and {INSERT_MODE_QUERY};
+```
+For `append_update` mode additionaly is used next command:
+```
+UPDATE public.users
+SET level = stage.level
+FROM (
+    SELECT 
+        last_user_event.user_id,
+        last_user_event.level
+    FROM (   
+        SELECT 
+            stage.userid as user_id,
+            stage.level,
+            row_number() over (partition by stage.userid order by stage.ts desc) as rn
+        FROM staging_events stage
+        WHERE page='NextSong' AND stage.userid is not null
+    ) last_user_event
+    WHERE rn = 1 
+) stage
+WHERE users.user_id = stage.user_id;
 ```
 ### Load time dim table
  `time` table is filled from  `staging_events` using next command:
 ```
-CREATE TEMP TABLE temp_table_time (start_time timestamp NOT NULL);
-INSERT INTO temp_table_time
-SELECT distinct TIMESTAMP 'epoch' + staging_events.ts/1000 *INTERVAL '1 second' as start_time 
-FROM staging_events
-WHERE page='NextSong' 
-;
-BEGIN TRANSACTION;
-    DELETE FROM temp_table_time 
-    USING public."time" 
-    WHERE temp_table_time.start_time = time.start_time
-    ; 
-    INSERT INTO public."time" (start_time, hour, day, week, month, year, weekday)
-    SELECT 
-        stage.start_time,
-        cast(extract(HOUR FROM stage.start_time) AS int4),
-        cast(extract(DAY FROM stage.start_time) AS int4),
-        cast(extract(WEEK FROM stage.start_time) AS int4),
-        cast(extract(MONTH FROM stage.start_time) AS int4),
-        cast(extract(YEAR FROM stage.start_time) AS int4),
-        cast(to_char(stage.start_time, 'D') AS int4)
-    FROM temp_table_time stage;
-END TRANSACTION;
-DROP TABLE temp_table_time;
+SELECT 
+    stage.start_time,
+    cast(extract(HOUR FROM stage.start_time) AS int4),
+    cast(extract(DAY FROM stage.start_time) AS int4),
+    cast(extract(WEEK FROM stage.start_time) AS int4),
+    cast(extract(MONTH FROM stage.start_time) AS int4),
+    cast(extract(YEAR FROM stage.start_time) AS int4),
+    cast(to_char(stage.start_time, 'D') AS int4)
+FROM (
+    SELECT
+        distinct TIMESTAMP 'epoch' + staging_events.ts/1000 *INTERVAL '1 second' as start_time 
+    FROM staging_events
+    WHERE page='NextSong') stage
+WHERE {INSERT_MODE_QUERY}
 ```
 ### Load artist dim table
   `artists` table is filled from  `staging_songs` using next command:
 ```
-CREATE TEMP TABLE temp_table_artists (like public.artists);
-INSERT INTO temp_table_artists (artist_id, name, location, latitude, longitude)
 SELECT 
 dedubl.artist_id,
 dedubl.artist_name,
@@ -344,60 +346,38 @@ FROM (
     stage.artist_longitude,
     row_number() over (partition by stage.artist_id order by LEN(stage.artist_name) asc, stage.artist_name asc) as rn
     FROM staging_songs stage
+    WHERE {INSERT_MODE_QUERY}
     ) dedubl
 WHERE rn = 1   
 ;
-BEGIN TRANSACTION;
-    DELETE FROM temp_table_artists 
-    USING public.artists
-    WHERE temp_table_artists.artist_id = artists.artist_id
-    ;
-    INSERT INTO public.artists (artist_id, name, location, latitude, longitude)
-    SELECT *
-    FROM temp_table_artists
-    ;
-END TRANSACTION;
-DROP TABLE temp_table_artists;
 ```
 ### Load song dim table
  `songs` table  is filled from  `staging_songs` using next command:
 ```
-CREATE TEMP TABLE temp_table_songs (like public.songs);
-INSERT INTO temp_table_songs (song_id, title, artist_id, year, duration)
-    SELECT
-        dedubl.song_id,
-        dedubl.title,
-        dedubl.artist_id,
-        dedubl.year,
-        dedubl.duration
-    FROM (
-        SELECT 
-            stage.song_id,
-            stage.title,
-            stage.artist_id,
-            stage.year,
-            stage.duration,
-            row_number() over (partition by stage.song_id order by LEN(stage.title) asc, stage.title asc) as rn
-        FROM staging_songs stage
-        ) dedubl
-    WHERE rn = 1;
-BEGIN TRANSACTION;
-    DELETE FROM temp_table_songs
-    USING public.songs
-    WHERE temp_table_songs.song_id = songs.song_id
-    ;
-    INSERT INTO public.songs (song_id, title, artist_id, year, duration)
-    SELECT *
-    FROM temp_table_songs
-    ;
-END TRANSACTION;
-DROP TABLE temp_table_songs;
+SELECT
+    dedubl.song_id,
+    dedubl.title,
+    dedubl.artist_id,
+    dedubl.year,
+    dedubl.duration
+FROM (
+    SELECT 
+        stage.song_id,
+        stage.title,
+        stage.artist_id,
+        stage.year,
+        stage.duration,
+        row_number() over (partition by stage.song_id order by LEN(stage.title) asc, stage.title asc) as rn
+    FROM staging_songs stage
+    WHERE {INSERT_MODE_QUERY}
+    ) dedubl
+WHERE rn = 1;
 ```
+## Loading fact table
 ### Load songplays fact table
-After  `users`,  `time`,  `artists` and  `songs` tables have been filled songplays table  is filled from  `staging_events`,  `artists` and  `songs` using next command:
+After  `users`,  `time`,  `artists` and  `songs` tables have been filled songplays table  is filled from  `staging_events`,  `artists` and  `songs` using next append command:
 ```
-CREATE TEMP TABLE temp_table_songplays (like public.songplays);
-INSERT INTO temp_table_songplays (songplay_id, start_time, user_id, level, song_id, artist_id, session_id, location, user_agent)
+INSERT INTO songplays (songplay_id, start_time, user_id, level, song_id, artist_id, session_id, location, user_agent)
 SELECT
     md5(events.sessionid || events.start_time) songplay_id,
     events.start_time, 
@@ -414,18 +394,7 @@ FROM (SELECT TIMESTAMP 'epoch' + ts/1000 * interval '1 second' AS start_time, st
 LEFT JOIN songs ON upper(BTRIM(songs.title)) = upper(BTRIM(events.song))
                AND trunc(songs.duration) = trunc(events.length)
 LEFT JOIN artists ON upper(BTRIM(artists.name)) = upper(BTRIM(events.artist))
-;
-BEGIN TRANSACTION;
-    DELETE FROM temp_table_songplays
-    USING public.songplays
-    WHERE temp_table_songplays.songplay_id = songplays.songplay_id
-    ;
-    INSERT INTO public.songplays (songplay_id, start_time, user_id, level, song_id, artist_id, session_id, location, user_agent)
-    SELECT *
-    FROM temp_table_songplays
-    ;
-END TRANSACTION;
-DROP TABLE temp_table_songplays;
+WHERE NOT EXISTS (SELECT songplay_id FROM songplay WHERE songplay.songplay_id = md5(events.sessionid || events.start_time));
 ```
 ## Data quality checks
 Runs scripts to check table for number of rows using next template:
