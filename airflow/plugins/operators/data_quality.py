@@ -57,9 +57,9 @@ class DataQualityOperator(BaseOperator):
                 self.log.info('Check double in keys in tables')
                 for table_key in self.table_key_list:
                     table = table_key["table_name"]
-                    key = table_key["key"]
+                    key = table_key["table_key"]
                     self.log.info('Checking double in {} in table {} BEGIN'.format(key, table))
-                    formatted_sql = dq_check["check_sql"].format(table_name = table)
+                    formatted_sql = dq_check["check_sql"].format(table_key = key, table_name = table)
 
                     records = redshift.get_records(formatted_sql)
 
