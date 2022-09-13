@@ -146,6 +146,6 @@ class SqlQueries:
                         GROUP BY {table_key}
                         HAVING count(1)>1) a
                       """, 
-         'type':      "double"
+         'type':      "double",
          'exp_res':   0}
     ]
