@@ -143,7 +143,8 @@ run_quality_checks = DataQualityOperator(
     task_id='Run_data_quality_checks',
     dag=dag,
     redshift_conn_id="redshift",
-    table_list = ["public.songplays","public.users","public.songs","public.artists","public.time"]
+    table_key_list = SqlQueries.table_key_list
+    dq_checks = SqlQueries.dq_checks
 )
 
 end_operator = DummyOperator(task_id='Stop_execution',  dag=dag)

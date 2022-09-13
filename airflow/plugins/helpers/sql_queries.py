@@ -1,6 +1,6 @@
 class SqlQueries:
     """
-    contains SQL Queries for upsert operations in datapipeline
+    contains SQL Queries for insert operations in datapipeline
     """
     songplay_table_insert = ("""
         SELECT
@@ -122,3 +122,30 @@ class SqlQueries:
     time_table_key = ("start_time")
 
     time_table_fields = ("start_time, hour, day, week, month, year, weekday")
+
+    table_list =  ["public.songplays","public.users","public.songs","public.artists","public.time"]
+
+    table_key_list = [
+        {"table_name": "public.songplays", "table_key": "songplay_id"},
+        {"table_name": "public.users",     "table_key": "user_id"},
+        {"table_name": "public.songs",     "table_key": "song_id"},
+        {"table_name": "public.artists",   "table_key": "artist_id"},
+        {"table_name": "public.time",      "table_key": "start_time"}
+    ]
+
+    dq_checks=[
+        {'check_sql': """
+                        SELECT count(1) as count_f
+                        FROM {table_name}
+                      """, 
+         'type':      "fill"},
+        {'check_sql': """
+                        SELECT count(1) FROM (
+                        SELECT {table_key}
+                        FROM {table_name}
+                        GROUP BY {table_key}
+                        HAVING count(1)>1) a
+                      """, 
+         'type':      "double"
+         'exp_res':   0}
+    ]
